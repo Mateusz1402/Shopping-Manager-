@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 from tables.tables_definition import Products, Categories
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 app = FastAPI(title="Grocery Shopping API")
 app.add_middleware(
@@ -23,6 +24,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+class ProductCreate(BaseModel):
+    name: str
+    category_id: int
 
 
 #endspoints
@@ -54,3 +59,16 @@ def toggle_product_status(product_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(product)
     return {"message": f"Updated the status of {product.name}", "is_ordered": product.is_ordered}
+
+
+@app.post("/products")
+def create_product(product_data: ProductCreate, db: Session = Depends(get_db)):
+    new_product = Products(
+        name=product_data.name,
+        category_id=product_data.category_id,
+        is_ordered=False
+    )
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    return {"message": "Product created successfully", "product": {"id": new_product.id, "name": new_product.name}}
