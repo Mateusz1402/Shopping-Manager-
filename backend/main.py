@@ -2,9 +2,17 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 from tables.tables_definition import Products, Categories
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Grocery Shopping API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+
+)
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/grocery_shopping_db"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
