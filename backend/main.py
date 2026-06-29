@@ -48,6 +48,19 @@ def get_products(db: Session = Depends(get_db)):
         for p in products
     ]
 
+
+@app.get("/categories")
+def get_categories(db: Session = Depends(get_db)):
+    categories = db.query(Categories).all()
+    return [
+        {
+            "id": c.id,
+            "category_name": c.category_name
+        }
+        for c in categories
+    ]
+
+
 @app.patch("/products/{product_id}/toggle")
 def toggle_product_status(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Products).filter(Products.id == product_id).first()
