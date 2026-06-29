@@ -1,0 +1,56 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from database import get_db
+from tables.tables_definition import Products
+from schemas import ProductCreate
+
+
+router = APIRouter(
+    prefix="/products",
+    tags=["Products"]
+)
+
+@router.get("")
+def get_products(db: Session = Depends(get_db)):
+    products = db.query(Products).all()
+    return [
+        {
+            "id" : p.id,
+            "name" : p.name,
+            "category_id" : p.category_id,
+            "is_ordered" : p.is_ordered
+        }
+        for p in products
+    ]
+
+
+@router.patch("/{product_id}/toggle")
+def toggle_product_status(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Products).filter(Products.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    product.id_ordered = not product.is_ordered
+    db.commit()
+    db.refresh(product)
+    return {
+        "message" : f"Updated the status of {product.name}", 
+        "is_ordered" : product.is_ordered
+    }
+
+
+@router.post("")
+def create_product(product_data: ProductCreate, db: Session = Depends(get_db)):
+    new_product = Products(
+        name = product_data.name,
+        category_id = product_data.category_id,
+        is_ordered = False
+    )
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    return {
+        "message" : "Product created successfully",
+        "product" : {"id" : new_product.id,
+                     "name" : new_product.name}
+    }
