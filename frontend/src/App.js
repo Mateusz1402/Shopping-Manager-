@@ -11,6 +11,7 @@ function App() {
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
   // Form States
   const [newProductName, setNewProductName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('1'); // Defaults to Category ID 1
 
   useEffect(() => {
@@ -80,7 +81,7 @@ function App() {
       });
 
       if (response.ok) {
-        showToast(`"${newProductName}" successfully added!`);
+        showToast(`${newProductName} successfully added!`);
         setNewProductName(''); // Clear input
         fetchProducts();       // Refresh state list
         setCurrentView('list'); // Go back to main view
@@ -92,11 +93,38 @@ function App() {
     }
   };
 
+
+  const handleAddCategorySubmit = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+
+    try{
+      const response = await fetch('http://localhost:8000/categories', {
+        method: 'POST',
+        headers: {'Content-type' : 'application/json'},
+        body: JSON.stringify({
+          category_name : newCategoryName
+        })
+      });
+
+      if (response.ok){
+        showToast(`${newCategoryName} successfully added!`);
+        setNewCategoryName('');
+        fetchCategories();
+        setCurrentView('list');
+      } else {
+        showToast(`Failed to add category ${newCategoryName}.`, "error");
+      }
+    } catch (error) {
+      console.error("Error adding category", "error")
+    }
+  }
+
   return (
     <div className="app-layout">
       {/* Notification Banner */}
       <div className={`toast-notification ${notification.show ? 'show' : ''} ${notification.type}`}>
-        {notification.type === 'success' ? '✅' : '❌'} {notification.message}
+        {notification.type === 'success' ? '' : '❌'} {notification.message}
       </div>
       {/* Upper Left Menu Button */}
       <button className="menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -110,6 +138,7 @@ function App() {
         <ul>
           <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); }}>🛒 Shopping List</li>
           <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
+          <li onClick={() => { setCurrentView('add-category'); setIsMenuOpen(false)}}>➕ Add New Category</li>
         </ul>
       </div>
 
@@ -118,58 +147,86 @@ function App() {
 
       {/* Main Content Area */}
       <div className="main-content">
-        {currentView === 'list' ? (
-          <div className="card">
-            <h1>Grocery Shopping List 🛒</h1>
-            <h3>All Products</h3>
-            <ul className="product-list">
-              {products.map(product => (
-                <li key={product.id} className="product-item">
-                  <span className="toggle-icon" onClick={() => handleToggle(product.id)}>
-                    {product.is_ordered ? '✅' : '➕'}
-                  </span>
-                  <span className={product.is_ordered ? 'ordered-text' : ''}>
-                    {product.name}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <div className="card">
-            <h1>Add New Product 🆕</h1>
-            <form onSubmit={handleAddProductSubmit} className="product-form">
-              <div className="form-group">
-                <label>Product Name:</label>
-                <input 
-                  type="text" 
-                  value={newProductName} 
-                  onChange={(e) => setNewProductName(e.target.value)} 
-                  placeholder="e.g. Milk, Bread, Bananas"
-                  required
-                />
-              </div>
+        {(() => {
+          switch (currentView) {
+            case 'list':
+              return (
+                <div className="card">
+                  <h1>Grocery Shopping List</h1>
+                  <h3>All Products</h3>
+                  <ul className="product-list">
+                    {products.map(product => (
+                      <li key={product.id} className="product-item">
+                        <span className="toggle-icon" onClick={() => handleToggle(product.id)}>
+                          {product.is_ordered ? '✅' : '➕'}
+                        </span>
+                        <span className={product.is_ordered ? 'ordered-text' : ''}>
+                          {product.name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>  
+              );
+            case 'add-product':
+              return (
+                <div className="card">
+                  <h1>Add New Product</h1>
+                  <form onSubmit={handleAddProductSubmit} className="product-form">
+                    <div className="form-group">
+                      <label>Product Name:</label>
+                      <input
+                          type="text"
+                          value={newProductName}
+                          onChange={(e) => setNewProductName(e.target.value)}
+                          placeholder="e.g. Milk, Bread, Bananas"
+                          required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Category:</label>
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}>
+                          {categories.map(category => (
+                            <option key={category.id} value={category.id}>
+                              {category.category_name}
+                            </option>
+                          ))}
+                        </select>
+                    </div>
 
-              <div className="form-group">
-                <label>Category:</label>
-                <select 
-                  value={selectedCategory} 
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                {/* Dynamically mapping database categories */}
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.category_name}
-                  </option>
-                ))}
-                </select>
-              </div>
+                    <button type="submit" className="submit-btn">Save Product</button>
+                    <button type="button" className="cancel-btn" onClick={() => setCurrentView('list')}>Cancel</button>
+                  </form>
+                </div>
+              );
+            case 'add-category':
+              return (
+                <div className="card">
+                  <h1>Add New Category</h1>
+                  <form onSubmit={handleAddCategorySubmit} className="product-form">
+                    <div className="form-group">
+                      <label>Category Name:</label>
+                      <input
+                        type="text"
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        placeholder="e.g. Meat, Frozen, Snacks"
+                        required
+                      />
+                    </div>
 
-              <button type="submit" className="submit-btn">Save Product</button>
-              <button type="button" className="cancel-btn" onClick={() => setCurrentView('list')}>Cancel</button>
-            </form>
-          </div>
-        )}
+                    <button type="submit" className="submit-btn">Save Category</button>
+                    <button type="button" className="cancel-btn" onClick={() => setCurrentView('list')}>Cancel</button>
+                  </form>
+                </div>
+              );
+            
+              default:
+                return <div>Page not found.</div>;
+          }
+        })()}
       </div>
     </div>
   );

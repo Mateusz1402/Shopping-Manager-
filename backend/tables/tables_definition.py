@@ -10,7 +10,7 @@ Base = declarative_base()
 class Categories(Base):
     __tablename__ = 'categories'
     id = Column(Integer, primary_key=True)
-    category_name = Column(String, nullable=False)
+    category_name = Column(String, nullable=False, unique=True)
 
 
 #products table
