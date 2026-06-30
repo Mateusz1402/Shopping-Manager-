@@ -76,6 +76,6 @@ def delete_product(product_name: str, db: Session = Depends(get_db)):
     db.delete(existing_product)
     db.commit()
     return {
-        "message" : f"The product {existing_product} successfully deleted."
+        "message" : f"The product {existing_product.name} successfully deleted."
     }
     

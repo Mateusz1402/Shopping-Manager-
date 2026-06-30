@@ -5,7 +5,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('list'); // 'list'--'add-product'--'add-category'--'delete-product'
+  const [currentView, setCurrentView] = useState('list'); // 'list'--'add-product'--'add-category'--'delete-product'--'detele-category'
   
   //Notification State
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
@@ -14,6 +14,7 @@ function App() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('1'); // Defaults to Category ID 1
   const [productToDelete, setProductToDelete] = useState('');
+  const [categoryToDelete, setCategoryToDelete] = useState('');
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -152,6 +153,33 @@ function App() {
     }
   };
 
+
+  const handleDeleteCategorySubmit = async (e) => {
+    e.preventDefault();
+    if (!categoryToDelete){
+      showToast("No category selected to delete.", "error")
+      return;
+    }
+    if (!window.confirm(`Are you sure to delete "${categoryToDelete}"?`)) return;
+    
+    try{
+      const response = await fetch(`http://localhost:8000/categories/${encodeURIComponent(categoryToDelete)}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (response.ok){
+        showToast(data.message);
+        fetchCategories();
+        setCurrentView('list');
+      } else {
+        showToast(data.detail || "Failed to remove the category.", "error");
+      }
+    } catch (error) {
+      console.error("Error deleting category", error);
+      showToast("Network error occured.", "error");
+    }
+  };
+
   return (
     <div className="app-layout">
       {/* Notification Banner */}
@@ -172,6 +200,7 @@ function App() {
           <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
           <li onClick={() => { setCurrentView('add-category'); setIsMenuOpen(false)}}>➕ Add New Category</li>
           <li onClick={() => { setCurrentView('delete-product'); setIsMenuOpen(false); fetchCategories();}}>Remove a Product</li>
+          <li onClick={() => { setCurrentView('delete-category'); setIsMenuOpen(false); fetchCategories();}}>Remove a Category</li>
         </ul>
       </div>
 
@@ -303,6 +332,35 @@ function App() {
                       disabled={!productToDelete}
                     >
                       Delete Selected Product
+                    </button>
+                    <button type="button" className="cancel-btn" onClick={() => setCurrentView('list')}>Cancel</button>
+                  </form>
+                </div>
+              );
+
+              case 'delete-category':
+              return (
+                <div className="card">
+                  <h1>Remove a Category 🗑️</h1>
+                  <form onSubmit={handleDeleteCategorySubmit} className="product-form">
+                    
+                    {/* Dropdown 1: Select Category Filter */}
+                    <div className="form-group">
+                      <label>Choose Category:</label>
+                      <select value={categoryToDelete} onChange={(e) => setCategoryToDelete(e.target.value)}>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.category_name}>{category.category_name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      className="submit-btn" 
+                      style={{ backgroundColor: '#e55353' }}
+                      disabled={!categoryToDelete}
+                    >
+                      Delete Selected Category
                     </button>
                     <button type="button" className="cancel-btn" onClick={() => setCurrentView('list')}>Cancel</button>
                   </form>
