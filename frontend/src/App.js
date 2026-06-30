@@ -5,7 +5,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('list'); // 'list' or 'add-product'
+  const [currentView, setCurrentView] = useState('list'); // 'list'--'add-product'--'add-category'--'delete-product'
   
   //Notification State
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
@@ -13,10 +13,15 @@ function App() {
   const [newProductName, setNewProductName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('1'); // Defaults to Category ID 1
-
+  const [productToDelete, setProductToDelete] = useState('');
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  //Helper filter: lists only products that match the currently selected category
+  const filteredProductsToDelete = products.filter(
+    p => p.category_id === parseInt(selectedCategory)
+  );
 
   const fetchProducts = async () => {
     try {
@@ -120,6 +125,33 @@ function App() {
     }
   }
 
+
+  const handleDeleteProductSubmit = async (e) => {
+    e.preventDefault();
+    if (!productToDelete){
+      showToast("No product selected to delete.", "error")
+      return;
+    }
+    if (!window.confirm(`Are you sure to delete "${productToDelete}"?`)) return;
+
+    try{
+      const response = await fetch(`http://localhost:8000/products/${encodeURIComponent(productToDelete)}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (response.ok){
+        showToast(data.message);
+        fetchProducts();
+        setCurrentView('list');
+      } else {
+        showToast(data.detail || "Failed to delete product.", "error");
+      }
+    } catch (error) {
+      console.error("Error deleting product", error);
+      showToast("Network error occured.", "error");
+    }
+  };
+
   return (
     <div className="app-layout">
       {/* Notification Banner */}
@@ -139,6 +171,7 @@ function App() {
           <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); }}>🛒 Shopping List</li>
           <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
           <li onClick={() => { setCurrentView('add-category'); setIsMenuOpen(false)}}>➕ Add New Category</li>
+          <li onClick={() => { setCurrentView('delete-product'); setIsMenuOpen(false); fetchCategories();}}>Remove a Product</li>
         </ul>
       </div>
 
@@ -222,7 +255,60 @@ function App() {
                   </form>
                 </div>
               );
-            
+
+            case 'delete-product':
+              return (
+                <div className="card">
+                  <h1>Remove a Product 🗑️</h1>
+                  <form onSubmit={handleDeleteProductSubmit} className="product-form">
+                    
+                    {/* Dropdown 1: Select Category Filter */}
+                    <div className="form-group">
+                      <label>Filter by Category:</label>
+                      <select value={selectedCategory} onChange={(e) => {
+                        setSelectedCategory(e.target.value);
+                        setProductToDelete('');
+                        }}>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.id}>{category.category_name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Dropdown 2: Dynamic matching products dropdown */}
+                    <div className="form-group">
+                      <label>Select Product to Delete:</label>
+                      <select 
+                        value={productToDelete} 
+                        onChange={(e) => setProductToDelete(e.target.value)}
+                        disabled={filteredProductsToDelete.length === 0}
+                      >
+                        {filteredProductsToDelete.length === 0 ? (
+                          <option value="">-- No products in this category --</option>
+                        ) : (
+                          <>
+                            <option value="">--Choose a product --</option>
+                            {filteredProductsToDelete.map(product => (
+                              <option key={product.id} value={product.name}>{product.name}</option>
+                            ))}
+                          </>
+                        )}
+                      </select>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      className="submit-btn" 
+                      style={{ backgroundColor: '#e55353' }}
+                      disabled={!productToDelete}
+                    >
+                      Delete Selected Product
+                    </button>
+                    <button type="button" className="cancel-btn" onClick={() => setCurrentView('list')}>Cancel</button>
+                  </form>
+                </div>
+              );
+
               default:
                 return <div>Page not found.</div>;
           }

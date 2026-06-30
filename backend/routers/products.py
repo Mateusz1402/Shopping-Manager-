@@ -41,11 +41,21 @@ def toggle_product_status(product_id: int, db: Session = Depends(get_db)):
 
 @router.post("")
 def create_product(product_data: ProductCreate, db: Session = Depends(get_db)):
+    existing_product = db.query(Products).filter(
+        Products.name.ilike(product_data.name.strip())
+    ).first()
+
+    if existing_product:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Product '{product_data.name}' already exists!"
+        )
+    
     new_product = Products(
-        name = product_data.name,
+        name = product_data.name.strip(),
         category_id = product_data.category_id,
         is_ordered = False
-    )
+    ) 
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
@@ -54,3 +64,18 @@ def create_product(product_data: ProductCreate, db: Session = Depends(get_db)):
         "product" : {"id" : new_product.id,
                      "name" : new_product.name}
     }
+
+
+@router.delete("/{product_name}")
+def delete_product(product_name: str, db: Session = Depends(get_db)):
+    existing_product = db.query(Products).filter(Products.name == product_name).first()
+
+    if not existing_product:
+        raise HTTPException(status_code=400, detail="Product not found")
+    
+    db.delete(existing_product)
+    db.commit()
+    return {
+        "message" : f"The product {existing_product} successfully deleted."
+    }
+    
