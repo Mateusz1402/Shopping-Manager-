@@ -119,7 +119,7 @@ body {
 
 .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
 
-.form-group label { margin-bottom: 5px; font-weight: bold; color: #555; }
+.form-group label { margin-bottom: 5px; font-weight: bold; color: white; }
 
 .form-group input, .form-group select {
   padding: 10px;

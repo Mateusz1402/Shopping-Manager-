@@ -2,22 +2,66 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
+  //Authentication States
+  const [user, setUser] = useState(null);
+  const [authMode, setAuthMode] = useState('login')
+  const [authUsername, setAuthUsername] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+
+  //Application States
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentView, setCurrentView] = useState('list'); // 'list'--'add-product'--'add-category'--'delete-product'--'detele-category'
-  
-  //Notification State
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
+  
   // Form States
   const [newProductName, setNewProductName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('1'); // Defaults to Category ID 1
   const [productToDelete, setProductToDelete] = useState('');
   const [categoryToDelete, setCategoryToDelete] = useState('');
+  
   useEffect(() => {
+    if (user)
     fetchProducts();
-  }, []);
+  }, [user]);
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    const endpoint = authMode === 'login' ? 'login' : 'register';
+    try{
+      const response = await fetch(`http://localhost:8000/auth/${endpoint}`, {
+        method: 'POST',
+        headers: {'Content-Type' : 'application/json'},
+        body: JSON.stringify({username: authUsername, password: authPassword})
+      });
+      const data = await response.json();
+
+      if(response.ok){
+        if(authMode === 'login'){
+          setUser({token: data.token, username: data.username, role: data.role});
+          showToast(`Welcome back, ${data.username}!`);
+          setCurrentView('list');
+        } else {
+          showToast("Registration successful! Please log in.");
+          setAuthMode('login');
+        }
+        setAuthPassword('');
+      } else {
+        showToast(data.detail || "Authentication failed.", "error");
+      }
+    } catch (error){
+      showToast("Network error occurres", "error");
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentView('list');
+    showToast("Logged out successfully");
+  };
+
 
   //Helper filter: lists only products that match the currently selected category
   const filteredProductsToDelete = products.filter(
@@ -179,7 +223,32 @@ function App() {
       showToast("Network error occured.", "error");
     }
   };
-
+  if (!user){
+    return (
+    <div className="app-layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '10vh'}}>
+      <div className="card" style={{maxWidth: '400px', width: '100%'}}>
+        <h1>{authMode === 'login' ? 'Login' : 'Register'}</h1>
+        <form onSubmit={handleAuthSubmit} className="product-form">
+          <div className="form-group">
+            <label>Username</label>
+            <input type="text" value={authUsername} onChange={(e) => setAuthUsername(e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required />
+          </div>
+          <button type="submit" className="submit-btn">
+            {authMode === 'login' ? 'Sign In' : 'Sign Up'}
+          </button>
+          <p style={{ textAlign: 'center', marginTop: '15px', cursor: 'pointer', color: '#007bff'}}
+            onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>
+              {authMode === 'login' ? "Don't have an account? Register." : "Already have an account? Login."}
+            </p>
+        </form>
+      </div>
+    </div> 
+    )
+  }
   return (
     <div className="app-layout">
       {/* Notification Banner */}
@@ -194,13 +263,18 @@ function App() {
       {/* Slide-out Sidebar Menu */}
       <div className={`sidebar ${isMenuOpen ? 'open' : ''}`}>
         <button className="close-btn" onClick={() => setIsMenuOpen(false)}>×</button>
-        <h2>Navigation</h2>
+        <h2>Hello, {user.username} <span style={{ fontSize: '12px', display: 'block', color: '#aaa'}}>({user.role})</span></h2>
         <ul>
           <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); }}>🛒 Shopping List</li>
-          <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
-          <li onClick={() => { setCurrentView('add-category'); setIsMenuOpen(false)}}>➕ Add New Category</li>
-          <li onClick={() => { setCurrentView('delete-product'); setIsMenuOpen(false); fetchCategories();}}>Remove a Product</li>
-          <li onClick={() => { setCurrentView('delete-category'); setIsMenuOpen(false); fetchCategories();}}>Remove a Category</li>
+          {user.role === 'admin' && (
+            <>
+              <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
+              <li onClick={() => { setCurrentView('add-category'); setIsMenuOpen(false)}}>➕ Add New Category</li>
+              <li onClick={() => { setCurrentView('delete-product'); setIsMenuOpen(false); fetchCategories();}}>Remove a Product</li>
+              <li onClick={() => { setCurrentView('delete-category'); setIsMenuOpen(false); fetchCategories();}}>Remove a Category</li>
+            </>
+          )}
+          <li onClick={handleLogout} style={{ color: '#e55353', marginTop: '20px', borderTop: '1px solid #444', paddingTop: '10px'}}>Logout</li>
         </ul>
       </div>
 
@@ -210,6 +284,9 @@ function App() {
       {/* Main Content Area */}
       <div className="main-content">
         {(() => {
+          if (currentView !== 'list' && user.role !== 'admin'){
+            return <div className="card"><h1>Access Denied</h1><p>Guests only have access to the Shopping List page.</p></div>;
+          }
           switch (currentView) {
             case 'list':
               return (

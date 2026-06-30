@@ -7,3 +7,8 @@ class ProductCreate(BaseModel):
 
 class CategoryCreate(BaseModel):
     category_name: str
+
+
+class AuthSchema(BaseModel):
+    username: str
+    password: str
