@@ -226,6 +226,9 @@ function App() {
   if (!user){
     return (
     <div className="app-layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '10vh'}}>
+      <div className={`toast-notification ${notification.show ? 'show' : ''} ${notification.type}`}>
+        {notification.type === 'success' ? '' : '❌'} {notification.message}
+      </div>
       <div className="card" style={{maxWidth: '400px', width: '100%'}}>
         <h1>{authMode === 'login' ? 'Login' : 'Register'}</h1>
         <form onSubmit={handleAuthSubmit} className="product-form">
@@ -241,7 +244,11 @@ function App() {
             {authMode === 'login' ? 'Sign In' : 'Sign Up'}
           </button>
           <p style={{ textAlign: 'center', marginTop: '15px', cursor: 'pointer', color: '#007bff'}}
-            onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>
+            onClick={() => {
+              setAuthMode(authMode === 'login' ? 'register' : 'login');
+              setAuthUsername('');
+              setAuthPassword('');
+              }}>
               {authMode === 'login' ? "Don't have an account? Register." : "Already have an account? Login."}
             </p>
         </form>
@@ -253,7 +260,7 @@ function App() {
     <div className="app-layout">
       {/* Notification Banner */}
       <div className={`toast-notification ${notification.show ? 'show' : ''} ${notification.type}`}>
-        {notification.type === 'success' ? '' : '❌'} {notification.message}
+        {notification.type === 'success' ? '' : ''} {notification.message}
       </div>
       {/* Upper Left Menu Button */}
       <button className="menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>

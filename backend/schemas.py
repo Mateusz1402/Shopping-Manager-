@@ -1,3 +1,4 @@
+import datetime
 from pydantic import BaseModel
 
 class ProductCreate(BaseModel):
@@ -12,3 +13,11 @@ class CategoryCreate(BaseModel):
 class AuthSchema(BaseModel):
     username: str
     password: str
+
+
+class ListSchema(BaseModel):
+    product: str
+    category: str
+    user: str
+    index: int
+    date: datetime.datetime

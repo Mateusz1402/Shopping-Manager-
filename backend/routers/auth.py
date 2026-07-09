@@ -36,7 +36,7 @@ def login(data: AuthSchema, db: Session = Depends(get_db)):
     user = db.query(Users).filter(Users.username == data.username).first()
     if not user or not pwd_context.verify(data.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
+    
     payload = {
         "sub" : user.username,
         "role" : user.role, 

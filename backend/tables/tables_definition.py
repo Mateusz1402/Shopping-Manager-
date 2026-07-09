@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float
+from sqlalchemy.sql import func
 
 string_db = "postgresql://postgres:postgres@localhost:5432/grocery_shopping_db"
 engine = create_engine(string_db)
@@ -18,7 +19,7 @@ class Categories(Base):
 class Products(Base):
     __tablename__ = 'products'
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
     is_ordered = Column(Boolean, nullable=False, default=False)
 
@@ -31,6 +32,16 @@ class Users(Base):
     password = Column(String, nullable=False)
     role = Column(String, nullable=False, default="guest")
 
+
+# memory table
+class Memory(Base):
+    __tablename__ = 'memory'
+    id = Column(Integer, primary_key=True)
+    product = Column(String, ForeignKey('products.name'), nullable=False)
+    category = Column(String, ForeignKey('categories.category_name'), nullable=False)
+    user = Column(String, ForeignKey('users.username'), nullable=False)
+    grocery_list_index = Column(Integer, nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
 Base.metadata.create_all(engine)
 
