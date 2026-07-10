@@ -12,7 +12,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('list'); // 'list'--'add-product'--'add-category'--'delete-product'--'detele-category'
+  const [currentView, setCurrentView] = useState('grocery_list'); // 'list'--'add-product'--'add-category'--'delete-product'--'detele-category'--'grocery_list'
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
   
   // Form States
@@ -42,7 +42,7 @@ function App() {
         if(authMode === 'login'){
           setUser({token: data.token, username: data.username, role: data.role});
           showToast(`Welcome back, ${data.username}!`);
-          setCurrentView('list');
+          setCurrentView('grocery_list');
         } else {
           showToast("Registration successful! Please log in.");
           setAuthMode('login');
@@ -134,7 +134,7 @@ function App() {
         showToast(`${newProductName} successfully added!`);
         setNewProductName(''); // Clear input
         fetchProducts();       // Refresh state list
-        setCurrentView('list'); // Go back to main view
+        setCurrentView('grocery_list'); // Go back to main view
       } else {
         showToast("Failed to save product.", "error");
       }
@@ -161,7 +161,7 @@ function App() {
         showToast(`${newCategoryName} successfully added!`);
         setNewCategoryName('');
         fetchCategories();
-        setCurrentView('list');
+        setCurrentView('grocery_list');
       } else {
         showToast(`Failed to add category ${newCategoryName}.`, "error");
       }
@@ -187,7 +187,7 @@ function App() {
       if (response.ok){
         showToast(data.message);
         fetchProducts();
-        setCurrentView('list');
+        setCurrentView('grocery_list');
       } else {
         showToast(data.detail || "Failed to delete product.", "error");
       }
@@ -214,7 +214,7 @@ function App() {
       if (response.ok){
         showToast(data.message);
         fetchCategories();
-        setCurrentView('list');
+        setCurrentView('grocery_list');
       } else {
         showToast(data.detail || "Failed to remove the category.", "error");
       }
@@ -272,6 +272,7 @@ function App() {
         <button className="close-btn" onClick={() => setIsMenuOpen(false)}>×</button>
         <h2>Hello, {user.username} <span style={{ fontSize: '12px', display: 'block', color: '#aaa'}}>({user.role})</span></h2>
         <ul>
+          <li onClick={() => { setCurrentView('grocery_list'); setIsMenuOpen(false);}}>Homepage</li>
           <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); }}>🛒 Shopping List</li>
           {user.role === 'admin' && (
             <>
