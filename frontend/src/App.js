@@ -296,6 +296,17 @@ function App() {
             return <div className="card"><h1>Access Denied</h1><p>Guests only have access to the Shopping List page.</p></div>;
           }
           switch (currentView) {
+            case 'grocery_list':
+              return (
+                <div className="header">
+                  <div className="header-box">Total grocery lists</div>
+                  <div className="header-box">Active grocery lists</div>
+                  <div className="end"></div>
+                  <div className="header-box">10</div>
+                  <div className="header-box">6</div>
+                  <div className="end"></div>
+                </div>
+              )
             case 'list':
               return (
                 <div className="card">

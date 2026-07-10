@@ -179,3 +179,26 @@ body {
 .toast-notification.error {
   background-color: #e55353;
 }
+
+
+
+.header {
+  width: 70%;
+  height: 100px;
+  background-color: white;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.header-box{
+  width: 40px;
+  height: 50%;
+  background-color: blue;
+  float:left;
+  
+}
+
+.end{
+  clear:both;
+}
