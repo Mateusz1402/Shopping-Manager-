@@ -19,5 +19,3 @@ class ListSchema(BaseModel):
     product: str
     category: str
     user: str
-    index: int
-    date: datetime.datetime

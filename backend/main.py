@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from database import get_db
-from routers import products, categories, auth
+from routers import products, categories, auth, grocery_lists
 from tables.tables_definition import Products, Categories
 from schemas import ProductCreate
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +17,7 @@ app.add_middleware(
 app.include_router(products.router)
 app.include_router(categories.router)
 app.include_router(auth.router)
+app.include_router(grocery_lists.router)
 
 @app.get("/")
 def root():
