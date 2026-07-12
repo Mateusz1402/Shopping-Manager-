@@ -14,7 +14,8 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentView, setCurrentView] = useState('grocery_list'); // 'list'--'add-product'--'add-category'--'delete-product'--'detele-category'--'grocery_list'
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
-  
+  const [activeList, setActiveList] = useState([]);
+
   // Form States
   const [newProductName, setNewProductName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -25,6 +26,7 @@ function App() {
   useEffect(() => {
     if (user)
     fetchProducts();
+    fetchActiveList();
   }, [user]);
 
   const handleAuthSubmit = async (e) => {
@@ -223,6 +225,17 @@ function App() {
       showToast("Network error occured.", "error");
     }
   };
+
+  const fetchActiveList = async () => {
+    try{
+      const response = await fetch("http://localhost:8000/grocery_lists/latest_active");
+      const data = await response.json();
+      setActiveList(data);
+    } catch (error) {
+      console.error("Error while fetching latest active grocery list", error)
+    }
+  }
+
   if (!user){
     return (
     <div className="app-layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '10vh'}}>
@@ -272,7 +285,7 @@ function App() {
         <button className="close-btn" onClick={() => setIsMenuOpen(false)}>×</button>
         <h2>Hello, {user.username} <span style={{ fontSize: '12px', display: 'block', color: '#aaa'}}>({user.role})</span></h2>
         <ul>
-          <li onClick={() => { setCurrentView('grocery_list'); setIsMenuOpen(false);}}>Homepage</li>
+          <li onClick={() => { setCurrentView('grocery_list'); setIsMenuOpen(false); fetchActiveList()}}>Homepage</li>
           <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); }}>🛒 Shopping List</li>
           {user.role === 'admin' && (
             <>
@@ -298,13 +311,54 @@ function App() {
           switch (currentView) {
             case 'grocery_list':
               return (
-                <div className="header">
-                  <div className="header-box">Total grocery lists</div>
-                  <div className="header-box">Active grocery lists</div>
-                  <div className="end"></div>
-                  <div className="header-box">10</div>
-                  <div className="header-box">6</div>
-                  <div className="end"></div>
+                <div className="grocery-list-card">
+                  <div className="header">
+                    <div className="header-box">Total grocery lists</div>
+                    <div className="header-box">Active grocery lists</div>
+                    <div className="header-box">Last grocery list created at</div>
+
+                    <div className="header-box">10</div>  {/*TO DO! */}
+                    <div className="header-box">6</div>   {/*TO DO! */}
+                    <div className="header-box">12.07.2026</div> {/*TO DO! */}
+                  </div>
+                  <div className="content-grid">
+                    <div className="card">
+                      <h2>
+                        Latest Active Grocery List
+                      </h2>
+                      
+                      {activeList.length > 0 ? (
+                        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                          {activeList.map((item, index) => (
+                            <li 
+                              key={index} 
+                              style={{ 
+                                padding: '12px', 
+                                borderBottom: '1px solid #eee', 
+                                display: 'flex', 
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <span style={{ fontWeight: '600', fontSize: '16px' }}>{item.product}</span>
+                              <span style={{ 
+                                backgroundColor: '#e1f5fe', 
+                                color: '#0288d1', 
+                                padding: '4px 10px', 
+                                borderRadius: '12px', 
+                                fontSize: '12px',
+                                fontWeight: 'bold'
+                              }}>
+                                {item.category}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p style={{ color: '#666', fontStyle: 'italic' }}>No active products found in the latest list.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )
             case 'list':

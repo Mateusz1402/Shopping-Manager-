@@ -1,8 +1,9 @@
 import datetime
 from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy import func, distinct
 from sqlalchemy.orm import Session
 from database import get_db
-from tables.tables_definition import Memory
+from tables.tables_definition import Memory, Categories
 from schemas import ListSchema
 
 router = APIRouter(
@@ -10,7 +11,7 @@ router = APIRouter(
     tags=["Grocery_lists"]
 )
 
-
+# GET entire grocery list
 @router.get("{index}")
 def get_grocery_list(index: int, db: Session = Depends(get_db)):
     list = db.query(Memory).filter(Memory.grocery_list_index == index).all()
@@ -27,7 +28,7 @@ def get_grocery_list(index: int, db: Session = Depends(get_db)):
     for l in list
     ]
 
-
+# POST to save new grocery list
 @router.post("/{index}")
 def post_grocery_list(index: int, schema: list[ListSchema], db: Session = Depends(get_db)):
     if len(schema) < 1:
@@ -54,6 +55,7 @@ def post_grocery_list(index: int, schema: list[ListSchema], db: Session = Depend
         "message" : "Grocery list saved successfully"
     }
 
+# PATCH unactive existing grocery list
 @router.patch("/unactive/{index}")
 def patch_unactive_grocery_list(index: int, db: Session = Depends(get_db)):
     index_exists = bool(db.query(Memory).filter(Memory.grocery_list_index == index).first())
@@ -67,3 +69,28 @@ def patch_unactive_grocery_list(index: int, db: Session = Depends(get_db)):
     return{
         "message" : "Grocery list unactive successfully"
     }
+
+
+# GET amount of active grocery lists
+@router.get("/actives")
+def get_amount_of_active_lists(db: Session = Depends(get_db)):
+    amount = db.query(func.count(distinct(Memory.grocery_list_index))).filter(Memory.active == True).scalar()
+    return amount
+
+# GET latest active grocery list
+@router.get("/latest_active")
+def get_latest_active_grocery_list(db: Session = Depends(get_db)):
+    highest_index = db.query(func.max(Memory.grocery_list_index)).filter(Memory.active == True).scalar()
+    latest = db.query(Memory)\
+        .join(Categories, Memory.category == Categories.category_name)\
+        .filter(Memory.active == True, Memory.grocery_list_index == highest_index)\
+        .order_by(Categories.id.asc())\
+        .all()
+    if not latest:
+        raise HTTPException(status_code=404, detail="No latest active grocery list in db")
+    return [
+        {
+            "product" : l.product,
+            "category" : l.category
+        } for l in latest
+    ]
