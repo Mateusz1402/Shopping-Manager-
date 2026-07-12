@@ -323,38 +323,60 @@ function App() {
                   </div>
                   <div className="content-grid">
                     <div className="card">
-                      <h2>
+                      <h2 style={{ color: 'white', marginBottom: '20px' }}>
                         Latest Active Grocery List
                       </h2>
                       
-                      {activeList.length > 0 ? (
-                        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                          {activeList.map((item, index) => (
-                            <li 
-                              key={index} 
-                              style={{ 
-                                padding: '12px', 
-                                borderBottom: '1px solid #eee', 
-                                display: 'flex', 
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
-                              }}
-                            >
-                              <span style={{ fontWeight: '600', fontSize: '16px' }}>{item.product}</span>
-                              <span style={{ 
-                                backgroundColor: '#e1f5fe', 
-                                color: '#0288d1', 
-                                padding: '4px 10px', 
-                                borderRadius: '12px', 
-                                fontSize: '12px',
-                                fontWeight: 'bold'
-                              }}>
-                                {item.category}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
+                      {activeList.length > 0 ? (() => {
+                        // 1. Group the flat array into an object: { Meat: [...], Snacks: [...] }
+                        const groupedItems = activeList.reduce((acc, item) => {
+                          if (!acc[item.category]) {
+                            acc[item.category] = [];
+                          }
+                          acc[item.category].push(item);
+                          return acc;
+                        }, {});
+
+                        // 2. Render each category block dynamically
+                        return Object.entries(groupedItems).map(([category, items]) => (
+                          <div key={category} style={{ marginBottom: '20px' }}>
+                            
+                            {/* Category Header Label */}
+                            <h3 style={{ 
+                              color: '#0288d1', 
+                              backgroundColor: '#e1f5fe', 
+                              padding: '6px 12px', 
+                              borderRadius: '6px', 
+                              fontSize: '14px',
+                              fontWeight: 'bold',
+                              display: 'inline-block',
+                              marginBottom: '10px'
+                            }}>
+                              {category}
+                            </h3>
+
+                            {/* List of products belonging strictly to this category */}
+                            <ul style={{ listStyleType: 'none', padding: 0, margin: 0, paddingLeft: '10px' }}>
+                              {items.map((item, index) => (
+                                <li 
+                                  key={index} 
+                                  style={{ 
+                                    padding: '10px 0', 
+                                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)', 
+                                    display: 'flex', 
+                                    alignItems: 'center'
+                                  }}
+                                >
+                                  <span style={{ fontWeight: '500', fontSize: '16px', color: 'white' }}>
+                                    • {item.product}
+                                  </span>
+                                  <span>aaa</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ));
+                      })() : (
                         <p style={{ color: '#666', fontStyle: 'italic' }}>No active products found in the latest list.</p>
                       )}
                     </div>
