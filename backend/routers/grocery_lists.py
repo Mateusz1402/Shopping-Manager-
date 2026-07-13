@@ -84,13 +84,31 @@ def get_latest_active_grocery_list(db: Session = Depends(get_db)):
     latest = db.query(Memory)\
         .join(Categories, Memory.category == Categories.category_name)\
         .filter(Memory.active == True, Memory.grocery_list_index == highest_index)\
-        .order_by(Categories.id.asc())\
+        .order_by(Categories.id.desc())\
         .all()
     if not latest:
         raise HTTPException(status_code=404, detail="No latest active grocery list in db")
     return [
         {
             "product" : l.product,
-            "category" : l.category
+            "category" : l.category,
+            "id" : l.id
         } for l in latest
     ]
+
+
+# PATCH for toggling the active status of the product
+@router.patch("/toggle/{index}")
+def patch_toggle_active_status(index: int, db: Session = Depends(get_db)):
+    if index < 0:
+        raise HTTPException(status_code=404, detail="Prohibit product index!")
+    obj = db.query(Memory).filter(Memory.id == index).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="No searching product")
+    obj.active = not obj.active
+    db.commit()
+    db.refresh(obj)
+    return {
+        "message" : "Toggling active status of the product finish with success",
+        "actual_state" : obj.active
+    }

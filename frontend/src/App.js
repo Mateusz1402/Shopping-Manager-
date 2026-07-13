@@ -117,6 +117,26 @@ function App() {
     }
   };
 
+
+  const handleToggleActive = async (index) => {
+    try {
+      const response = await fetch(`http://localhost:8000/grocery_lists/toggle/${index}`, {
+        method: 'PATCH',
+      });
+      if(response.ok){
+        setActiveList(activeList.map(item => 
+          item.id === index ? { ...item, active: !item.active } : item
+        ));
+        showToast("Item status updated!");
+      }else{
+        showToast("Failed to update item status", "error");
+      }
+    } catch (error){
+      console.error("Error toggling grocery list item:", error);
+      showToast("Network error occurred", "error");
+    }
+  };
+
   // Form submission handler
   const handleAddProductSubmit = async (e) => {
     e.preventDefault();
@@ -367,10 +387,41 @@ function App() {
                                     alignItems: 'center'
                                   }}
                                 >
-                                  <span style={{ fontWeight: '500', fontSize: '16px', color: 'white' }}>
-                                    • {item.product}
-                                  </span>
-                                  <span>aaa</span>
+                                  {/* List of products belonging strictly to this category */}
+                                  <ul style={{ listStyleType: 'none', padding: 0, margin: 0, paddingLeft: '10px' }}>
+                                    {items.map((item, index) => (
+                                      <li 
+                                        key={index} 
+                                        style={{ 
+                                          padding: '10px 0', 
+                                          borderBottom: '1px solid rgba(255, 255, 255, 0.1)', 
+                                          display: 'flex', 
+                                          alignItems: 'center',
+                                          justifyContent: 'space-between' // Spaced out nicely
+                                        }}
+                                      >
+                                        {/* Product Name with conditional line-through styling if inactive */}
+                                        <span style={{ 
+                                          fontWeight: '500', 
+                                          fontSize: '16px', 
+                                          color: 'white',
+                                          textDecoration: item.active ? 'line-through' : 'none',
+                                          opacity: item.active ? 0.5 : 1 
+                                        }}>
+                                          • {item.product}
+                                        </span>
+
+                                        {/* Interactive Toggle Icon Span */}
+                                        <span 
+                                          className="toggle-icon" 
+                                          style={{ cursor: 'pointer', fontSize: '18px', padding: '0 5px', color: 'white', marginLeft: '20px' }} 
+                                          onClick={() => handleToggleActive(item.id)}
+                                        >
+                                          {item.active ? '❌ Bought' : '🛒 To buy'}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
                                 </li>
                               ))}
                             </ul>
