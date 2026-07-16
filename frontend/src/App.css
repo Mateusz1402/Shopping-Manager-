@@ -223,3 +223,15 @@ body {
   margin-top: 20px;
   align-items: center;
 }
+
+
+.bottom-btn{
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.save-btn{
+  height: 40px;
+}

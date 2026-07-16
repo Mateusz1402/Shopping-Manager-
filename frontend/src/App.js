@@ -125,7 +125,7 @@ function App() {
       });
       if(response.ok){
         setActiveList(activeList.map(item => 
-          item.id === index ? { ...item, active: !item.active } : item
+          item.id === index ? { ...item, active_product: !item.active_product } : item
         ));
         showToast("Item status updated!");
       }else{
@@ -134,6 +134,24 @@ function App() {
     } catch (error){
       console.error("Error toggling grocery list item:", error);
       showToast("Network error occurred", "error");
+    }
+  };
+
+
+  // Disactivating empty grocery list 
+  const handleDeactivateList = async (index) => {
+    try{
+      const response = await fetch(`http://localhost:8000/grocery_list/inactive/${index}`, {
+        method: 'PATCH'
+      });
+      if(response.ok){
+        showToast("Grocery list deactivated!")
+      }else{
+        showToast("Failed due to deactivate grocery list!", "error")
+      }
+    } catch (error){
+      console.error("Error while deactivating grocery list: ", error);
+      showToast("Failed due to deactivate grocery list!", "error")
     }
   };
 
@@ -374,7 +392,6 @@ function App() {
                             }}>
                               {category}
                             </h3>
-
                             {/* List of products belonging strictly to this category */}
                             <ul style={{ listStyleType: 'none', padding: 0, margin: 0, paddingLeft: '10px' }}>
                               {items.map((item, index) => (
@@ -384,44 +401,29 @@ function App() {
                                     padding: '10px 0', 
                                     borderBottom: '1px solid rgba(255, 255, 255, 0.1)', 
                                     display: 'flex', 
-                                    alignItems: 'center'
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between' // Spaced out nicely
                                   }}
                                 >
-                                  {/* List of products belonging strictly to this category */}
-                                  <ul style={{ listStyleType: 'none', padding: 0, margin: 0, paddingLeft: '10px' }}>
-                                    {items.map((item, index) => (
-                                      <li 
-                                        key={index} 
-                                        style={{ 
-                                          padding: '10px 0', 
-                                          borderBottom: '1px solid rgba(255, 255, 255, 0.1)', 
-                                          display: 'flex', 
-                                          alignItems: 'center',
-                                          justifyContent: 'space-between' // Spaced out nicely
-                                        }}
-                                      >
-                                        {/* Product Name with conditional line-through styling if inactive */}
-                                        <span style={{ 
-                                          fontWeight: '500', 
-                                          fontSize: '16px', 
-                                          color: 'white',
-                                          textDecoration: item.active ? 'line-through' : 'none',
-                                          opacity: item.active ? 0.5 : 1 
-                                        }}>
-                                          • {item.product}
-                                        </span>
+                                  {/* Product Name with conditional line-through styling if inactive */}
+                                  <span style={{ 
+                                    fontWeight: '500', 
+                                    fontSize: '16px', 
+                                    color: 'white',
+                                    textDecoration: item.active_product ? 'none' : 'line-through',
+                                    opacity: item.active_product ? 1 : 0.5, 
+                                  }}>
+                                    • {item.product}
+                                  </span>
 
-                                        {/* Interactive Toggle Icon Span */}
-                                        <span 
-                                          className="toggle-icon" 
-                                          style={{ cursor: 'pointer', fontSize: '18px', padding: '0 5px', color: 'white', marginLeft: '20px' }} 
-                                          onClick={() => handleToggleActive(item.id)}
-                                        >
-                                          {item.active ? '❌ Bought' : '🛒 To buy'}
-                                        </span>
-                                      </li>
-                                    ))}
-                                  </ul>
+                                  {/* Interactive Toggle Icon Span */}
+                                  <span 
+                                    className="toggle-icon" 
+                                    style={{ cursor: 'pointer', fontSize: '18px', padding: '0 5px', color: 'white', marginLeft: '20px' }} 
+                                    onClick={() => handleToggleActive(item.id)}
+                                  >
+                                    {item.active_product ? '🛒 To buy' : '❌ Bought'}
+                                  </span>
                                 </li>
                               ))}
                             </ul>
@@ -430,7 +432,10 @@ function App() {
                       })() : (
                         <p style={{ color: '#666', fontStyle: 'italic' }}>No active products found in the latest list.</p>
                       )}
-                    </div>
+                      <div className='bottom-btn'>
+                        <button className='save-btn' onClick={() => handleDeactivateList(activeList[0].grocery_list_index)}>Delete List</button>
+                      </div>
+                    </div> 
                   </div>
                 </div>
               )

@@ -41,7 +41,8 @@ class Memory(Base):
     category = Column(String, ForeignKey('categories.category_name'), nullable=False)
     user = Column(String, ForeignKey('users.username'), nullable=False)
     grocery_list_index = Column(Integer, nullable=False)
-    active = Column(Boolean, nullable=False, default=True)
+    active_list = Column(Boolean, nullable=False, default=True)
+    active_product = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
 Base.metadata.create_all(engine)
