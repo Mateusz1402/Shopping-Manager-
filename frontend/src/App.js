@@ -14,7 +14,9 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentView, setCurrentView] = useState('grocery_list'); // 'list'--'add-product'--'add-category'--'delete-product'--'detele-category'--'grocery_list'
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
-  const [activeList, setActiveList] = useState([]);
+  const [activeList, setActiveList] = useState([]); 
+  const [activeListExists, setActiveListExists] = useState(false);  // TODO!!!
+  const [metadata, setMetadata] = useState([]);
 
   // Form States
   const [newProductName, setNewProductName] = useState('');
@@ -27,6 +29,7 @@ function App() {
     if (user)
     fetchProducts();
     fetchActiveList();
+    fetchMetadata();
   }, [user]);
 
   const handleAuthSubmit = async (e) => {
@@ -141,11 +144,13 @@ function App() {
   // Disactivating empty grocery list 
   const handleDeactivateList = async (index) => {
     try{
-      const response = await fetch(`http://localhost:8000/grocery_list/inactive/${index}`, {
-        method: 'PATCH'
+      const response = await fetch(`http://localhost:8000/grocery_lists/inactive/${index}`, {
+        method: 'PATCH',
       });
       if(response.ok){
         showToast("Grocery list deactivated!")
+        fetchActiveList();
+        fetchMetadata();
       }else{
         showToast("Failed due to deactivate grocery list!", "error")
       }
@@ -155,6 +160,7 @@ function App() {
     }
   };
 
+  
   // Form submission handler
   const handleAddProductSubmit = async (e) => {
     e.preventDefault();
@@ -274,6 +280,16 @@ function App() {
     }
   }
 
+  const fetchMetadata = async () => {
+    try{
+      const response = await fetch("http://localhost:8000/grocery_lists/metadata");
+      const data = await response.json();
+      setMetadata(data);
+    } catch (error) {
+      console.error("Error while fetching metadata of grocery lists!")
+    }
+  }
+
   if (!user){
     return (
     <div className="app-layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '10vh'}}>
@@ -323,7 +339,7 @@ function App() {
         <button className="close-btn" onClick={() => setIsMenuOpen(false)}>×</button>
         <h2>Hello, {user.username} <span style={{ fontSize: '12px', display: 'block', color: '#aaa'}}>({user.role})</span></h2>
         <ul>
-          <li onClick={() => { setCurrentView('grocery_list'); setIsMenuOpen(false); fetchActiveList()}}>Homepage</li>
+          <li onClick={() => { setCurrentView('grocery_list'); setIsMenuOpen(false); fetchActiveList(); fetchMetadata()}}>Homepage</li>
           <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); }}>🛒 Shopping List</li>
           {user.role === 'admin' && (
             <>
@@ -355,9 +371,9 @@ function App() {
                     <div className="header-box">Active grocery lists</div>
                     <div className="header-box">Last grocery list created at</div>
 
-                    <div className="header-box">10</div>  {/*TO DO! */}
-                    <div className="header-box">6</div>   {/*TO DO! */}
-                    <div className="header-box">12.07.2026</div> {/*TO DO! */}
+                    <div className="header-box">{metadata.total_lists}</div>  {/*TO DO! */}
+                    <div className="header-box">{metadata.total_active_lists}</div>   {/*TO DO! */}
+                    <div className="header-box">{metadata.last_created_at}</div> {/*TO DO! */}
                   </div>
                   <div className="content-grid">
                     <div className="card">
@@ -427,10 +443,13 @@ function App() {
                                 </li>
                               ))}
                             </ul>
+                            
                           </div>
                         ));
+                        setActiveListExists(false);
                       })() : (
                         <p style={{ color: '#666', fontStyle: 'italic' }}>No active products found in the latest list.</p>
+              
                       )}
                       <div className='bottom-btn'>
                         <button className='save-btn' onClick={() => handleDeactivateList(activeList[0].grocery_list_index)}>Delete List</button>

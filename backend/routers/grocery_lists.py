@@ -70,16 +70,17 @@ def get_amount_of_active_lists(db: Session = Depends(get_db)):
 # GET latest active grocery list
 @router.get("/latest_active")
 def get_latest_active_grocery_list(db: Session = Depends(get_db)):
-    highest_index = db.query(func.max(Memory.grocery_list_index)).filter(Memory.active_list == True).scalar()
+    highest_active_index = db.query(func.max(Memory.grocery_list_index)).filter(Memory.active_list == True).scalar()
     latest = db.query(Memory)\
         .join(Categories, Memory.category == Categories.category_name)\
-        .filter(Memory.active_list == True, Memory.grocery_list_index == highest_index)\
+        .filter(Memory.active_list == True, Memory.grocery_list_index == highest_active_index)\
         .order_by(Categories.id.desc())\
         .all()
     if not latest:
-        raise HTTPException(status_code=404, detail="No latest active grocery list in db")
+        raise HTTPException(status_code=404, detail="No active lists!")
+
     return [
-        {
+        {   
             "product" : l.product,
             "category" : l.category,
             "id" : l.id,
@@ -87,6 +88,25 @@ def get_latest_active_grocery_list(db: Session = Depends(get_db)):
             "grocery_list_index" : l.grocery_list_index
         } for l in latest
     ]
+
+
+# GET metadata of active grocery lists
+@router.get("/metadata")
+def get_metadata(db: Session = Depends(get_db)):
+    highest_index = db.query(func.max(Memory.grocery_list_index)).scalar()
+    if not highest_index or highest_index == 0:
+        raise HTTPException(status_code=404, details="Wrong max. grocery index!")
+    total_active_lists = 0
+    for i in range(1, highest_index):
+        is_active = db.query(Memory).filter(Memory.grocery_list_index == i, Memory.active_list == True).first() is not None
+        if is_active:
+            total_active_lists += 1
+    last_created_at = db.query(Memory).filter(Memory.grocery_list_index == highest_index).first()
+    return {
+        "total_lists" : highest_index,
+        "total_active_lists" : total_active_lists,
+        "last_created_at" : last_created_at.created_at.strftime("%Y-%m-%d  %H:%M:%S")
+    }
 
 
 # PATCH for toggling the active status of the product
