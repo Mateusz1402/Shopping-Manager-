@@ -15,7 +15,6 @@ function App() {
   const [currentView, setCurrentView] = useState('grocery_list'); // 'list'--'add-product'--'add-category'--'delete-product'--'detele-category'--'grocery_list'
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
   const [activeList, setActiveList] = useState([]); 
-  const [activeListExists, setActiveListExists] = useState(false);  // TODO!!!
   const [metadata, setMetadata] = useState([]);
 
   // Form States
@@ -371,9 +370,9 @@ function App() {
                     <div className="header-box">Active grocery lists</div>
                     <div className="header-box">Last grocery list created at</div>
 
-                    <div className="header-box">{metadata.total_lists}</div>  {/*TO DO! */}
-                    <div className="header-box">{metadata.total_active_lists}</div>   {/*TO DO! */}
-                    <div className="header-box">{metadata.last_created_at}</div> {/*TO DO! */}
+                    <div className="header-box">{metadata.total_lists}</div>
+                    <div className="header-box">{metadata.total_active_lists}</div>
+                    <div className="header-box">{metadata.last_created_at}</div>
                   </div>
                   <div className="content-grid">
                     <div className="card">
@@ -446,14 +445,16 @@ function App() {
                             
                           </div>
                         ));
-                        setActiveListExists(false);
                       })() : (
                         <p style={{ color: '#666', fontStyle: 'italic' }}>No active products found in the latest list.</p>
               
                       )}
+                      {/* Only render the delete button cantainer if there is an active grocery list*/}
+                      {activeList.length > 0 && (
                       <div className='bottom-btn'>
                         <button className='save-btn' onClick={() => handleDeactivateList(activeList[0].grocery_list_index)}>Delete List</button>
                       </div>
+                      )}
                     </div> 
                   </div>
                 </div>
