@@ -31,6 +31,7 @@ def get_products(db: Session = Depends(get_db)):
     ]
 
 
+#PATCH toggle the is_ordered column of the specific product
 @router.patch("/{product_id}/toggle")
 def toggle_product_status(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Products).filter(Products.id == product_id).first()
@@ -46,6 +47,7 @@ def toggle_product_status(product_id: int, db: Session = Depends(get_db)):
     }
 
 
+#POST creating new product
 @router.post("")
 def create_product(product_data: ProductCreate, db: Session = Depends(get_db)):
     existing_product = db.query(Products).filter(
@@ -73,6 +75,7 @@ def create_product(product_data: ProductCreate, db: Session = Depends(get_db)):
     }
 
 
+#DELETE the product
 @router.delete("/{product_name}")
 def delete_product(product_name: str, db: Session = Depends(get_db)):
     existing_product = db.query(Products).filter(Products.name == product_name).first()
@@ -85,4 +88,19 @@ def delete_product(product_name: str, db: Session = Depends(get_db)):
     return {
         "message" : f"The product {existing_product.name} successfully deleted."
     }
+    
+
+#GET info whether some product's is_ordered column is triggered to True
+@router.get("/is_ordered")
+def get_is_ordered(db: Session = Depends(get_db)):
+    #boolean value due to compare scalar value with 0
+    is_ordered = db.query(Products)\
+                    .filter(Products.is_ordered == True)\
+                    .count() > 0
+    return is_ordered
+
+
+
+
+    
     

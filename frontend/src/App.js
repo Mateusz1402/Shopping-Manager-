@@ -290,6 +290,7 @@ function App() {
     }
   }
 
+
   if (!user){
     return (
     <div className="app-layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '10vh'}}>
@@ -340,7 +341,7 @@ function App() {
         <h2>Hello, {user.username} <span style={{ fontSize: '12px', display: 'block', color: '#aaa'}}>({user.role})</span></h2>
         <ul>
           <li onClick={() => { setCurrentView('grocery_list'); setIsMenuOpen(false); fetchActiveList(); fetchMetadata()}}>Homepage</li>
-          <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); fetchProducts()}}>🛒 Shopping List</li>
+          <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); fetchProducts();}}>🛒 Shopping List</li>
           {user.role === 'admin' && (
             <>
               <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
@@ -466,18 +467,6 @@ function App() {
                   <h1>Grocery Shopping List</h1>
                   <h3>All Products</h3>
                   <ul className="product-list">
-                    {/*
-                    {products.map(product => (
-                      <li key={product.id} className="product-item">
-                        <span className="toggle-icon" onClick={() => handleToggle(product.id)}>
-                          {product.is_ordered ? '✅' : '➕'}
-                        </span>
-                        <span className={product.is_ordered ? 'ordered-text' : ''}>
-                          {product.name}
-                        </span>
-                      </li>
-                    ))}
-                    */}
                     {products.length > 0 ? (() => {
                         // 1. Group the flat array into an object: { Meat: [...], Snacks: [...] }
                         const groupedItems = products.reduce((acc, item) => {
@@ -533,7 +522,7 @@ function App() {
                                   <span 
                                     className="toggle-icon" 
                                     style={{ cursor: 'pointer', fontSize: '18px', padding: '0 5px', color: 'white', marginLeft: '20px' }} 
-                                    onClick={() => handleToggle(item.id)}
+                                    onClick={() => {handleToggle(item.id)}}
                                   >
                                     {item.active_product ? '✅' : '➕'}
                                   </span>
@@ -544,9 +533,11 @@ function App() {
                         ));
                       })() : (
                         <p style={{ color: '#666', fontStyle: 'italic' }}>No active products found in the latest list.</p>
-              
                       )}
                   </ul>
+                  <div className='bottom-btn'>
+                    <button className='save-btn'>Create New List</button>
+                  </div>
                 </div>  
               );
             case 'add-product':
