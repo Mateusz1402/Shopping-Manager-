@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import func, distinct
 from sqlalchemy.orm import Session
 from database import get_db
-from tables.tables_definition import Memory, Categories
+from tables.tables_definition import Memory, Categories, Products, Users
 from schemas import ListSchema
 
 
@@ -32,22 +32,25 @@ def get_grocery_list(index: int, db: Session = Depends(get_db)):
 
 
 # POST to save new grocery list
-@router.post("/{index}")
-def post_grocery_list(index: int, schema: list[ListSchema], db: Session = Depends(get_db)):
-    if len(schema) < 1:
-        raise HTTPException(status_code=404, detail="Grocery list is empty")
-    is_index_used = bool(db.query(Memory).filter(Memory.grocery_list_index == index).first())
-    if is_index_used:
-        raise HTTPException(status_code=404, detail="The index is already used")
-    if index <= 0:
+@router.post("")
+def post_grocery_list(db: Session = Depends(get_db)):
+    result = db.query(Products, Categories.category_name)\
+                    .join(Categories, Categories.id == Products.category_id)\
+                    .filter(Products.is_ordered == True)\
+                    .all()
+    highest_used_index = db.query(func.max(Memory.grocery_list_index)).scalar()
+                            #.order_by(Memory.grocery_list_index.asc())\
+                            #.first()
+    date = datetime.datetime.now()
+    
+    if (highest_used_index <= 0) or (highest_used_index >= 1000):
         raise HTTPException(status_code=404, detail="Wrong index value")
     
-    date = datetime.datetime.now()
-    for i in range(len(schema)):
-        grocery_item = Memory(product=schema[i].product,
-                              category=schema[i].category,
-                              user=schema[i].user,
-                              grocery_list_index=index,
+    for product, category in result:
+        grocery_item = Memory(product=product.name,
+                              category=category,
+                              user="mati",
+                              grocery_list_index=highest_used_index + 1,
                               active_list=True,
                               active_product=True,
                               created_at=date
@@ -98,7 +101,7 @@ def get_metadata(db: Session = Depends(get_db)):
     if not highest_index or highest_index == 0:
         raise HTTPException(status_code=404, details="Wrong max. grocery index!")
     total_active_lists = 0
-    for i in range(1, highest_index):
+    for i in range(1, highest_index+1):
         is_active = db.query(Memory).filter(Memory.grocery_list_index == i, Memory.active_list == True).first() is not None
         if is_active:
             total_active_lists += 1
