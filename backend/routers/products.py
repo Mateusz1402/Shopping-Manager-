@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func, distinct
 from sqlalchemy.orm import Session
 from database import get_db
-from tables.tables_definition import Products
+from tables.tables_definition import Products, Categories
 from schemas import ProductCreate
 
 
@@ -10,17 +11,23 @@ router = APIRouter(
     tags=["Products"]
 )
 
+
+# GET all of defined products according to their categories
 @router.get("")
 def get_products(db: Session = Depends(get_db)):
-    products = db.query(Products).all()
+    results = db.query(Products, Categories.category_name)\
+                .join(Categories, Categories.id == Products.category_id)\
+                .order_by(Products.id.asc())\
+                .all()
     return [
         {
-            "id" : p.id,
-            "name" : p.name,
-            "category_id" : p.category_id,
-            "is_ordered" : p.is_ordered
+            "product" : product.name,
+            "category" : category,
+            "id" : product.id,
+            "active_product" : product.is_ordered
+            #"grocery_list_index" : 1
         }
-        for p in products
+        for product, category in results
     ]
 
 
@@ -30,7 +37,7 @@ def toggle_product_status(product_id: int, db: Session = Depends(get_db)):
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    product.id_ordered = not product.is_ordered
+    product.is_ordered = not product.is_ordered
     db.commit()
     db.refresh(product)
     return {

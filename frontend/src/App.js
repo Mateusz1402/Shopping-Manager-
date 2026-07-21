@@ -113,6 +113,7 @@ function App() {
         setProducts(products.map(p => 
           p.id === productId ? { ...p, is_ordered: !p.is_ordered } : p
         ));
+        fetchProducts();
       }
     } catch (error) {
       console.error("Error toggling product:", error);
@@ -339,7 +340,7 @@ function App() {
         <h2>Hello, {user.username} <span style={{ fontSize: '12px', display: 'block', color: '#aaa'}}>({user.role})</span></h2>
         <ul>
           <li onClick={() => { setCurrentView('grocery_list'); setIsMenuOpen(false); fetchActiveList(); fetchMetadata()}}>Homepage</li>
-          <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); }}>🛒 Shopping List</li>
+          <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); fetchProducts()}}>🛒 Shopping List</li>
           {user.role === 'admin' && (
             <>
               <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
@@ -465,6 +466,7 @@ function App() {
                   <h1>Grocery Shopping List</h1>
                   <h3>All Products</h3>
                   <ul className="product-list">
+                    {/*
                     {products.map(product => (
                       <li key={product.id} className="product-item">
                         <span className="toggle-icon" onClick={() => handleToggle(product.id)}>
@@ -475,6 +477,75 @@ function App() {
                         </span>
                       </li>
                     ))}
+                    */}
+                    {products.length > 0 ? (() => {
+                        // 1. Group the flat array into an object: { Meat: [...], Snacks: [...] }
+                        const groupedItems = products.reduce((acc, item) => {
+                          if (!acc[item.category]) {
+                            acc[item.category] = [];
+                          }
+                          acc[item.category].push(item);
+                          return acc;
+                        }, {});
+
+                        // 2. Render each category block dynamically
+                        return Object.entries(groupedItems).map(([category, items]) => (
+                          <div key={category} style={{ marginBottom: '20px' }}>
+                            
+                            {/* Category Header Label */}
+                            <h3 style={{ 
+                              color: '#0288d1', 
+                              backgroundColor: '#e1f5fe', 
+                              padding: '6px 12px', 
+                              borderRadius: '6px', 
+                              fontSize: '14px',
+                              fontWeight: 'bold',
+                              display: 'inline-block',
+                              marginBottom: '10px'
+                            }}>
+                              {category}
+                            </h3>
+                            {/* List of products belonging strictly to this category */}
+                            <ul style={{ listStyleType: 'none', padding: 0, margin: 0, paddingLeft: '10px' }}>
+                              {items.map((item, index) => (
+                                <li 
+                                  key={index} 
+                                  style={{ 
+                                    padding: '10px 0', 
+                                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)', 
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between' // Spaced out nicely
+                                  }}
+                                >
+                                  {/* Product Name with conditional line-through styling if inactive */}
+                                  <span style={{ 
+                                    fontWeight: '500', 
+                                    fontSize: '16px', 
+                                    color: 'white',
+                                    textDecoration: item.active_product ? 'line-through' : 'none',
+                                    opacity: item.active_product ? 0.5 : 1, 
+                                  }}>
+                                    • {item.product}
+                                  </span>
+
+                                  {/* Interactive Toggle Icon Span */}
+                                  <span 
+                                    className="toggle-icon" 
+                                    style={{ cursor: 'pointer', fontSize: '18px', padding: '0 5px', color: 'white', marginLeft: '20px' }} 
+                                    onClick={() => handleToggle(item.id)}
+                                  >
+                                    {item.active_product ? '✅' : '➕'}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ));
+                      })() : (
+                        <p style={{ color: '#666', fontStyle: 'italic' }}>No active products found in the latest list.</p>
+              
+                      )}
                   </ul>
                 </div>  
               );

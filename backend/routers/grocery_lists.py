@@ -87,6 +87,7 @@ def get_latest_active_grocery_list(db: Session = Depends(get_db)):
             "active_product" : l.active_product,
             "grocery_list_index" : l.grocery_list_index
         } for l in latest
+        
     ]
 
 
