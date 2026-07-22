@@ -22,6 +22,8 @@ function App() {
   const [notification, setNotification] = useState({show: false, message: '', type: 'success' });
   const [activeList, setActiveList] = useState([]); 
   const [metadata, setMetadata] = useState([]);
+  const [isAddOpen, setIsAddOpen] = useState(false);  //Opening the drop down menu of adding new...
+  const [isRemoveOpen, setIsRemoveOpen] = useState(false);  //Opening the drop down menu of removing....
 
   // Form States
   const [newProductName, setNewProductName] = useState('');
@@ -392,10 +394,40 @@ function App() {
           <li onClick={() => { setCurrentView('list'); setIsMenuOpen(false); fetchProducts();}}>🛒 Shopping List</li>
           {user.role === 'admin' && (
             <>
-              <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories()}}>➕ Add New Product</li>
-              <li onClick={() => { setCurrentView('add-category'); setIsMenuOpen(false)}}>➕ Add New Category</li>
-              <li onClick={() => { setCurrentView('delete-product'); setIsMenuOpen(false); fetchCategories();}}>Remove a Product</li>
-              <li onClick={() => { setCurrentView('delete-category'); setIsMenuOpen(false); fetchCategories();}}>Remove a Category</li>
+              <li 
+                onClick={() => setIsAddOpen(!isAddOpen)}
+                style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}
+              >
+                <span>➕ Add New</span>
+                <span style={{ fontSize: '12px'}}>{isAddOpen ? '▲' : '▼'}</span>
+              </li>
+              {isAddOpen && (
+                <ul style={{ listStyleType: 'none', paddingLeft: '20px', marginTop: '5px', marginBottom: '5px'}}>
+                  <li onClick={() => { setCurrentView('add-product'); setIsMenuOpen(false); fetchCategories();}}>
+                    Product
+                  </li>
+                  <li onClick={() => { setCurrentView('add-category'); setIsMenuOpen(false);}}>
+                    Category
+                  </li>
+                </ul>
+              )}
+              <li 
+                onClick={() => setIsRemoveOpen(!isRemoveOpen)}
+                style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}
+                >
+                <span>🗑️ Remove</span>
+                <span style={{ fontSize: '12px'}}>{isAddOpen ? '▲' : '▼'}</span>
+              </li>
+              {isRemoveOpen && (
+                <ul style={{ listStyleType: 'none', paddingLeft: '20px', marginTop: '5px', marginBottom: '5px'}}>
+                  <li onClick={() => {setCurrentView('delete-product'); setIsMenuOpen(false); fetchCategories();}}>
+                    Product
+                  </li>
+                  <li onClick={() => {setCurrentView('delete-category'); setIsMenuOpen(false); fetchCategories();}}>
+                    Category
+                  </li>
+                </ul>
+              )}  
             </>
           )}
           <li onClick={handleLogout} style={{ color: '#e55353', marginTop: '20px', borderTop: '1px solid #444', paddingTop: '10px'}}>Logout</li>

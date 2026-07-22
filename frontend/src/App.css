@@ -235,3 +235,18 @@ body {
 .save-btn{
   height: 40px;
 }
+
+/* Sub-menu nested list styling */
+.sidebar ul ul li {
+  font-size: 14px;
+  color: #ccc;
+  padding: 8px 12px;
+  border-left: 2px solid #555;
+  transition: all 0.2s ease;
+}
+
+.sidebar ul ul li:hover {
+  color: #fff;
+  border-left-color: #007bff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
