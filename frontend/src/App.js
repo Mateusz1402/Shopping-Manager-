@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+//Special function to read stored user session on initial load
+const getInitialUser = () => {
+  const storedUser = localStorage.getItem('user');
+  return storedUser ? JSON.parse(storedUser) : null;
+};
+
 function App() {
   //Authentication States
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(getInitialUser);
   const [authMode, setAuthMode] = useState('login')
   const [authUsername, setAuthUsername] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -44,7 +50,15 @@ function App() {
 
       if(response.ok){
         if(authMode === 'login'){
-          setUser({token: data.token, username: data.username, role: data.role});
+          const userData = {
+            token : data.token,
+            username : data.username,
+            role : data.role
+          };
+          //Save to local storage
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          setUser(userData);
           showToast(`Welcome back, ${data.username}!`);
           setCurrentView('grocery_list');
         } else {
@@ -61,6 +75,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('user');
     setUser(null);
     setCurrentView('list');
     showToast("Logged out successfully");
