@@ -291,6 +291,26 @@ function App() {
   }
 
 
+  const saveNewList = async () => {
+    try{
+      const response = await fetch("http://localhost:8000/grocery_lists", {
+      method: 'POST',
+      headers: {'Content-type' : 'application/json'}
+      });
+
+      if(response.ok){
+        showToast("New list successfully added!");
+
+      } else {
+        showToast("Failed due to create new list", "error");
+      }
+    } catch (error) {
+      console.error("Error adding list", "error")
+    }
+  }
+  
+  
+
   if (!user){
     return (
     <div className="app-layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '10vh'}}>
@@ -536,7 +556,7 @@ function App() {
                       )}
                   </ul>
                   <div className='bottom-btn'>
-                    <button className='save-btn'>Create New List</button>
+                    <button className='save-btn' onClick={saveNewList}>Create New List</button>
                   </div>
                 </div>  
               );
