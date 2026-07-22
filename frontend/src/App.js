@@ -309,7 +309,20 @@ function App() {
     }
   }
   
-  
+  const unableAllProduct = async () => {
+    try{
+      const response = await fetch("http://localhost:8000/products/unable_all", {
+        method: 'PATCH'
+      });
+      if(response.ok){
+        fetchProducts()
+      }else{
+        showToast("Error due to unable all products", "error");
+      }
+    } catch (error){
+      console.error("Error due to unable all products", "error");
+    }
+  }
 
   if (!user){
     return (
@@ -556,7 +569,7 @@ function App() {
                       )}
                   </ul>
                   <div className='bottom-btn'>
-                    <button className='save-btn' onClick={saveNewList}>Create New List</button>
+                    <button className='save-btn' onClick={() => {saveNewList(); unableAllProduct();}}>Create New List</button>
                   </div>
                 </div>  
               );

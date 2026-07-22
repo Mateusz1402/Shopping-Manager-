@@ -100,7 +100,19 @@ def get_is_ordered(db: Session = Depends(get_db)):
     return is_ordered
 
 
-
+#PATCH change the 'is_ordered' status of all products to FALSE [it is used after creating a new list]
+@router.patch("/unable_all")
+def path_unable_all_products(db: Session = Depends(get_db)):
+    products = db.query(Products)\
+                .filter(Products.is_ordered == True)\
+                .all()
+    for product in products:
+        product.is_ordered = not product.is_ordered
+    db.commit()
+    
+    return {
+        "message" : "Successfully unabled all products"
+    }
 
     
     

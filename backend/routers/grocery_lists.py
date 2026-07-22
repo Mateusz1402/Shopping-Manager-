@@ -38,6 +38,10 @@ def post_grocery_list(db: Session = Depends(get_db)):
                     .join(Categories, Categories.id == Products.category_id)\
                     .filter(Products.is_ordered == True)\
                     .all()
+    print(len(result))
+    if not result:
+        raise HTTPException(status_code=404, detail="No product choosen!")
+    
     highest_used_index = db.query(func.max(Memory.grocery_list_index)).scalar()
                             #.order_by(Memory.grocery_list_index.asc())\
                             #.first()
@@ -45,7 +49,8 @@ def post_grocery_list(db: Session = Depends(get_db)):
     
     if (highest_used_index <= 0) or (highest_used_index >= 1000):
         raise HTTPException(status_code=404, detail="Wrong index value")
-    
+
+    created_items = []
     for product, category in result:
         grocery_item = Memory(product=product.name,
                               category=category,
@@ -56,8 +61,12 @@ def post_grocery_list(db: Session = Depends(get_db)):
                               created_at=date
                               )
         db.add(grocery_item)
+        created_items.append(grocery_item)
     db.commit()
-    db.refresh(grocery_item)
+    for item in created_items:
+        db.refresh(item)
+
+        
     return {
         "message" : "Grocery list saved successfully"
     }
